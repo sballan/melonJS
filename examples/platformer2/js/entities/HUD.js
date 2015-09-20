@@ -27,10 +27,10 @@ game.HUD.Container = me.Container.extend({
 
         // add our child score object at position
         this.addChild(new game.HUD.ScoreItem(-10, -40));
-        
+
         // add our fullscreen control object
         this.addChild(new game.HUD.FSControl(10, 10));
-        
+
         // add our audio control object
         this.addChild(new game.HUD.AudioControl(10 + 48 + 10, 10));
     }
@@ -55,26 +55,30 @@ game.HUD.FSControl = me.GUI_Object.extend({
         this.renderable.setOpacity(0.5);
         this.renderable.anchorPoint.set(0, 0);
     },
-    
+
     /**
      * function called when the pointer is over the object
      */
     onOver : function (/* event */) {
         this.renderable.setOpacity(1.0);
     },
-    
+
     /**
      * function called when the pointer is leaving the object area
      */
     onOut : function (/* event */) {
         this.renderable.setOpacity(0.5);
     },
-    
+
     /**
      * function called when the object is clicked on
      */
     onClick : function (/* event */) {
-        if (!me.device.isFullscreen) {
+        if (!me.device.hasFullscreenSupport) {
+            document.getElementById("brim-treadmill").style.display = "block";
+            document.getElementById("brim-mask").style.visibility = "visible";
+        }
+        else if (!me.device.isFullscreen) {
             me.device.requestFullscreen();
         } else {
             me.device.exitFullscreen();
@@ -94,7 +98,7 @@ game.HUD.AudioControl = me.GUI_Object.extend({
     /**
      * constructor
      */
-    init: function(x, y) {        
+    init: function(x, y) {
         this._super(me.GUI_Object, "init", [ x, y, {
             image: undefined, // dummy one
             framewidth : 48,
@@ -111,21 +115,21 @@ game.HUD.AudioControl = me.GUI_Object.extend({
         this.renderable.setOpacity(0.5);
         this.isMute = false;
     },
-    
+
     /**
      * function called when the pointer is over the object
      */
     onOver : function (/* event */) {
         this.renderable.setOpacity(1.0);
     },
-    
+
     /**
      * function called when the pointer is leaving the object area
      */
     onOut : function (/* event */) {
         this.renderable.setOpacity(0.5);
     },
-    
+
     /**
      * function called when the object is clicked on
      */
