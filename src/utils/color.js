@@ -1,12 +1,14 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 (function () {
     var rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
     var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+    var hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
     var hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+    var hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
     var cssToRGB = new Map();
 
@@ -168,7 +170,7 @@
     /**
      * A color manipulation object.
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Float32Array|Number} [r=0] red component or array of color components
@@ -373,8 +375,8 @@
         },
 
         /**
-         * Parse a Hex color ("#RGB" or "#RRGGBB" format) and set this color to
-         * the corresponding r,g,b values
+         * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
+         * the corresponding r,g,b,a values
          * @name parseHex
          * @memberOf me.Color
          * @function
@@ -385,14 +387,37 @@
             // TODO : Memoize this function by caching its input
 
             var match;
+            if ((match = hex8Rx.exec(hexColor))) {
+                // #AARRGGBB
+                return this.setColor(
+                    parseInt(match[1], 16),
+                    parseInt(match[2], 16),
+                    parseInt(match[3], 16),
+                    (parseInt(match[4], 16).clamp(0, 255) / 255.0).toFixed(1)
+                );
+            }
+
             if ((match = hex6Rx.exec(hexColor))) {
+                // #RRGGBB
                 return this.setColor(
                     parseInt(match[1], 16),
                     parseInt(match[2], 16),
                     parseInt(match[3], 16)
                 );
             }
+
+            if ((match = hex4Rx.exec(hexColor))) {
+                // #ARGB
+                return this.setColor(
+                    parseInt(match[1] + match[1], 16),
+                    parseInt(match[2] + match[2], 16),
+                    parseInt(match[3] + match[3], 16),
+                    (parseInt(match[4] + match[4], 16).clamp(0, 255) / 255.0).toFixed(1)
+                );
+            }
+
             if ((match = hex3Rx.exec(hexColor))) {
+                // #RGB
                 return this.setColor(
                     parseInt(match[1] + match[1], 16),
                     parseInt(match[2] + match[2], 16),
@@ -425,6 +450,20 @@
             // the r,g,b,a values are changed
 
             return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex();
+        },
+
+        /**
+         * Get the color in "#RRGGBBAA" format
+         * @name toHex8
+         * @memberOf me.Color
+         * @function
+         * @return {String}
+         */
+        toHex8 : function () {
+            // TODO : Memoize this function by caching its result until any of
+            // the r,g,b,a values are changed
+
+            return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex() + this.alpha.toHex();
         },
 
         /**

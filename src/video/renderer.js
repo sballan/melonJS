@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -10,7 +10,7 @@
     /**
      * a base renderer object
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Canvas} canvas The html canvas tag to draw to on screen.
@@ -45,7 +45,7 @@
             this.context = null;
 
             // global color
-            this.globalColor = new me.Color(255, 255, 255, 1.0);
+            this.currentColor = new me.Color(255, 255, 255, 1.0);
 
             return this;
         },
@@ -113,7 +113,7 @@
         /**
          * @ignore
          */
-        prepareSurface : function () {},
+        clear : function () {},
 
         /**
          * @ignore
@@ -182,7 +182,7 @@
             }
 
             var _context;
-            if (navigator.isCocoonJS) {
+            if (me.device.cocoon) {
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
                     "antialias" : this.antiAlias,
@@ -231,7 +231,7 @@
          * @return {Number}
          */
         globalAlpha : function () {
-            return this.globalColor.glArray[3];
+            return this.currentColor.glArray[3];
         },
 
         /**

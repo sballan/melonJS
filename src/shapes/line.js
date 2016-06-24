@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -8,7 +8,7 @@
     /**
      * a line segment Object.<br>
      * @class
-     * @extends Object
+     * @extends me.Polygon
      * @memberOf me
      * @constructor
      * @param {Number} x origin point of the Line
@@ -81,7 +81,7 @@
 
             return this;
         },
-        
+
         /**
          * clone this line segment
          * @name clone

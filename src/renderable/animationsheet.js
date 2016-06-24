@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -15,10 +15,10 @@
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the animation sheet
-     * @param {Image|String} settings.image Image to use for the animation
+     * @param {me.video.renderer.Texture|Image|String} settings.image reference to a spritesheet image or to a texture atlas
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {me.Vector2d} [settings.anchorPoint] Anchor point to draw the frame at
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // standalone image, with anchor in the center
      * var animationSheet = new me.AnimationSheet(0, 0, {
@@ -70,16 +70,21 @@
             // call the constructor
             this._super(me.Sprite, "init", [ x, y, settings ]);
 
-            // store/reset the current atlas information
+            // store/reset the current atlas information if specified
             if (typeof(settings.atlas) !== "undefined") {
                 this.textureAtlas = settings.atlas;
                 this.atlasIndices = settings.atlasIndices;
             } else {
-                // "regular" spritesheet
-                this.textureAtlas = me.video.renderer.cache.get(
-                    me.utils.getImage(settings.image),
-                    settings
-                ).getAtlas();
+                // set the texture Atlas object from the given texture
+                if (settings.image instanceof me.CanvasRenderer.prototype.Texture) {
+                    this.textureAtlas = settings.image;
+                } else {
+                    // "regular" spritesheet
+                    this.textureAtlas = me.video.renderer.cache.get(
+                        me.utils.getImage(settings.image),
+                        settings
+                    ).getAtlas();
+                }
                 this.atlasIndices = null;
             }
 

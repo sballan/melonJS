@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -15,8 +15,10 @@
     /**
      * a TMX Tile Set Object
      * @class
+     * @extends me.Object
      * @memberOf me
      * @constructor
+     * @param {Object} tileset tileset JSON definition
      */
     me.TMXTileset = me.Object.extend({
         // constructor
@@ -28,13 +30,17 @@
             this.TileProperties = [];
 
             this.firstgid = this.lastgid = +tileset.firstgid;
-            var src = tileset.source;
-            if (src && me.utils.getFileExtension(src) === "tsx") {
-                // load TSX
-                tileset = me.loader.getTMX(me.utils.getBasename(src));
 
-                if (!tileset) {
-                    throw new me.Error(src + " TSX tileset not found");
+            // check if an external tileset is defined
+            if (typeof(tileset.source) !== "undefined") {
+                var src = tileset.source;
+                var ext = me.utils.getFileExtension(src);
+                if (ext === "tsx" || ext === "json") {
+                    // load the external tileset (TSX/JSON)
+                    tileset = me.loader.getTMX(me.utils.getBasename(src));
+                    if (!tileset) {
+                        throw new me.Error(src + " external TSX/JSON tileset not found");
+                    }
                 }
             }
 
@@ -63,16 +69,30 @@
              */
             this.animations = new Map();
 
+            /**
+             * Remember the last update timestamp to prevent too many animation updates
+             * @private
+             * @type Map
+             * @name me.TMXTileset#_lastUpdate
+             */
+            this._lastUpdate = 0;
+
             var tiles = tileset.tiles;
             for (i in tiles) {
-                if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
-                    this.isAnimated = true;
-                    this.animations.set(+i + this.firstgid, {
-                        dt      : 0,
-                        idx     : 0,
-                        frames  : tiles[i].animation,
-                        cur     : tiles[i].animation[0]
-                    });
+                if (tiles.hasOwnProperty(i)) {
+                    if ("animation" in tiles[i]) {
+                        this.isAnimated = true;
+                        this.animations.set(+i + this.firstgid, {
+                            dt      : 0,
+                            idx     : 0,
+                            frames  : tiles[i].animation,
+                            cur     : tiles[i].animation[0]
+                        });
+                    }
+                    // set tile properties, if any (XML format)
+                    if ("properties" in tiles[i]) {
+                        this.setTileProperty(+i + this.firstgid, tiles[i].properties);
+                    }
                 }
             }
 
@@ -82,12 +102,12 @@
                 this.tileoffset.y = +offset.y;
             }
 
-            // set tile properties, if any
+            // set tile properties, if any (JSON format)
             var tileInfo = tileset.tileproperties;
             if (tileInfo) {
                 for (i in tileInfo) {
                     if (tileInfo.hasOwnProperty(i)) {
-                        this.setTileProperty(i + this.firstgid, tileInfo[i]);
+                        this.setTileProperty(+i + this.firstgid, tileInfo[i]);
                     }
                 }
             }
@@ -107,7 +127,7 @@
             this.atlas = this.texture.getAtlas();
 
             // calculate the number of tiles per horizontal line
-            var hTileCount = ~~(this.image.width / (this.tilewidth + this.spacing));
+            var hTileCount = +tileset.columns || ~~(this.image.width / (this.tilewidth + this.spacing));
             var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
             // compute the last gid value in the tileset
             this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
@@ -177,19 +197,24 @@
         // update tile animations
         update : function (dt) {
             var duration = 0,
+                now = me.timer.getTime(),
                 result = false;
 
-            this.animations.forEach(function (anim) {
-                anim.dt += dt;
-                duration = anim.cur.duration;
-                while (anim.dt >= duration) {
-                    anim.dt -= duration;
-                    anim.idx = (anim.idx + 1) % anim.frames.length;
-                    anim.cur = anim.frames[anim.idx];
+            if (this._lastUpdate !== now) {
+                this._lastUpdate = now;
+
+                this.animations.forEach(function (anim) {
+                    anim.dt += dt;
                     duration = anim.cur.duration;
-                    result = true;
-                }
-            });
+                    while (anim.dt >= duration) {
+                        anim.dt -= duration;
+                        anim.idx = (anim.idx + 1) % anim.frames.length;
+                        anim.cur = anim.frames[anim.idx];
+                        duration = anim.cur.duration;
+                        result = true;
+                    }
+                });
+            }
 
             return result;
         },

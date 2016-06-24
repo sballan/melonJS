@@ -181,18 +181,21 @@
 
         // Trigger button bindings
         Object.keys(bindings).forEach(function (index) {
-            if (!gamepads[index]) {
+            var gamepad = gamepads[index];
+            if (!gamepad) {
                 return;
             }
 
             var mapping = null;
-            if (gamepads[index].mapping !== "standard") {
-                mapping = remap.get(gamepads[index].id);
+            if (gamepad.mapping !== "standard") {
+                mapping = remap.get(gamepad.id);
             }
 
+            var binding = bindings[index];
+
             // Iterate all buttons that have active bindings
-            Object.keys(bindings[index].buttons).forEach(function (button) {
-                var last = bindings[index].buttons[button];
+            Object.keys(binding.buttons).forEach(function (button) {
+                var last = binding.buttons[button];
                 var mapped_button = button;
                 var mapped_axis = -1;
 
@@ -207,12 +210,12 @@
                 }
 
                 // Get mapped button
-                var current = gamepads[index].buttons[mapped_button] || {};
+                var current = gamepad.buttons[mapped_button] || {};
 
                 // Remap an axis to an analog button
                 if (mapping) {
                     if (mapped_axis >= 0) {
-                        var value = mapping.normalize_fn(gamepads[index].axes[mapped_axis], -1, +button);
+                        var value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
 
                         // Create a new object, because GamepadButton is read-only
                         current = {
@@ -235,6 +238,51 @@
                 // Update last button state
                 last.value = current.value;
                 last.pressed = current.pressed;
+            });
+
+            // Iterate all axes that have active bindings
+            Object.keys(binding.axes).forEach(function (axis) {
+                var last = binding.axes[axis];
+                var mapped_axis = axis;
+
+                // Remap buttons if necessary
+                if (mapping) {
+                    mapped_axis = mapping.axes[axis];
+                    if (mapped_axis < 0) {
+                        // axe is not mapped
+                        return;
+                    }
+                }
+
+                // retrieve the current value and normalize if necessary
+                var value = gamepad.axes[mapped_axis];
+                if (typeof(value) === "undefined") {
+                    return;
+                }
+                if (mapping) {
+                    value = mapping.normalize_fn(value, +axis, -1);
+                }
+                // normalize value into a [-1, 1] range value (treat 0 as positive)
+                var range = Math.sign(value) || 1;
+                if (!last[range]) {
+                    return;
+                }
+                var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
+
+                me.event.publish(me.event.GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
+
+                // Edge detection
+                if (!last[range].pressed && pressed) {
+                    api._keydown(e, last[range].keyCode, mapped_axis + 256);
+                }
+                else if ((last[range].pressed || (last[-range] && last[-range].pressed)) && !pressed) {
+                    range = last[range].pressed ? range : -range;
+                    api._keyup(e, last[range].keyCode, mapped_axis + 256);
+                }
+
+                // Update last axis state
+                last[range].value = value;
+                last[range].pressed = pressed;
             });
         });
     } : function () {};
@@ -324,18 +372,35 @@
      * @public
      * @function
      * @param {Number} index Gamepad index
-     * @param {me.input.GAMEPAD.BUTTONS} button
+     * @param {me.input.GAMEPAD.BUTTONS|Object} button id (deprecated) or definition as below
+     * @param {String} button.type "buttons" or "axes"
+     * @param {me.input.GAMEPAD.BUTTONS|me.input.GAMEPAD.AXES} button.code button or axis code id
+     * @param {String} [button.threshold] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
      * @param {me.input.KEY} keyCode
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
-     * // map the lower face button on the first gamepad to the X key
+     * ...
+     * // map the lower face button on the first gamepad to the X key (deprecated use)
      * me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1, me.input.KEY.X);
+     * // map the lower face button on the first gamepad to the X key
+     * me.input.bindGamepad(0, {type:"buttons", code: me.input.GAMEPAD.BUTTONS.FACE_1}, me.input.KEY.X);
+     * // map the left axis value on the first gamepad to the LEFT key
+     * me.input.bindGamepad(0, {type:"axes", code: me.input.GAMEPAD.AXES.LX, threshold: -0.5}, me.input.KEY.LEFT);
      */
     api.bindGamepad = function (index, button, keyCode) {
         // Throw an exception if no action is defined for the specified keycode
         if (!api._KeyBinding[keyCode]) {
             throw new me.Error("no action defined for keycode " + keyCode);
+        }
+
+        // for backward compatiblity with 3.0.x
+        if (typeof (button) !== "object") {
+            button = {
+                type : "buttons",
+                code : button
+            };
+            console.warn("Deprecated: me.input.bindGamepad parameteres have changed");
         }
 
         // Allocate bindings if not defined
@@ -346,12 +411,27 @@
             };
         }
 
-        // Map the gamepad button to the keycode
-        bindings[index].buttons[button] = {
+        var mapping = {
             "keyCode" : keyCode,
             "value" : 0,
-            "pressed" : false
+            "pressed" : false,
+            "threshold" : button.threshold // can be undefined
         };
+        var binding = bindings[index][button.type];
+
+        // Map the gamepad button or axis to the keycode
+        if (button.type === "buttons") {
+            // buttons are defined by a `gamePadButton` object
+            binding[button.code] = mapping;
+        } else if (button.type === "axes") {
+            // normalize threshold into a value that can represent both side of the axis
+            var range = (Math.sign(button.threshold) || 1);
+            // axes are defined using a double []
+            if (!binding[button.code]) {
+                binding[button.code] = {};
+            }
+            binding[button.code][range] = mapping;
+        }
     };
 
     /**

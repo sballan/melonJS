@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015 Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 (function () {
@@ -32,7 +32,7 @@
     /**
      * A WebGL texture Compositor object. This class handles all of the WebGL state<br>
      * Pushes texture regions into WebGL buffers, automatically flushes to GPU
-     * @extends Object
+     * @extends me.Object
      * @namespace me.WebGLRenderer.Compositor
      * @memberOf me
      * @constructor
@@ -71,7 +71,7 @@
              *
              * 24 = 2^4 + 2^3
              *
-             * As of July 2015, approximately 1.5% of all WebGL-enabled UAs
+             * As of October 2015, approximately 4.2% of all WebGL-enabled UAs
              * support more than 24 max textures, according to
              * http://webglstats.com/
              */
@@ -201,7 +201,7 @@
         setProjection : function (w, h) {
             this.flush();
             this.gl.viewport(0, 0, w, h);
-            this.uMatrix.set(
+            this.uMatrix.setTransform(
                 2 / w,  0,      0,
                 0,      -2 / h, 0,
                 -1,     1,      1
@@ -331,10 +331,10 @@
                 v3 = this.v[3].set(x + w, y + h);
 
             if (!m.isIdentity()) {
-                m.vectorMultiply(v0);
-                m.vectorMultiply(v1);
-                m.vectorMultiply(v2);
-                m.vectorMultiply(v3);
+                m.multiplyVector(v0);
+                m.multiplyVector(v1);
+                m.multiplyVector(v2);
+                m.multiplyVector(v3);
             }
 
             // Array index computation
@@ -434,6 +434,7 @@
          * Draw a line
          * @name drawLine
          * @memberOf me.WebGLRenderer.Compositor
+         * @function
          * @param {me.Vector2d[]} points Line vertices
          * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
          */
@@ -444,7 +445,7 @@
             var j = 0;
             for (var i = 0; i < points.length; i++) {
                 if (!this.matrix.isIdentity()) {
-                    this.matrix.vectorMultiply(points[i]);
+                    this.matrix.multiplyVector(points[i]);
                 }
                 this.stream[j++] = points[i].x;
                 this.stream[j++] = points[i].y;
@@ -486,6 +487,30 @@
                 false,
                 ELEMENT_OFFSET,
                 VERTEX_OFFSET
+            );
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aColor,
+                COLOR_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                COLOR_OFFSET
+            );
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aTexture,
+                TEXTURE_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                TEXTURE_OFFSET
+            );
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aRegion,
+                REGION_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                REGION_OFFSET
             );
         },
 

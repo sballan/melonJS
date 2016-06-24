@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -8,7 +8,7 @@
     /**
      * a generic 2D Vector Object
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Number} [x=0] x value of the vector
@@ -21,8 +21,8 @@
         init : function (x, y) {
             return this.set(x || 0, y || 0);
         },
-        
-        /** 
+
+        /**
          * @ignore */
         _set : function (x, y) {
             this.x = x;

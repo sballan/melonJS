@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -27,6 +27,16 @@
             // detect device type/platform
             me.device._detectDevice();
 
+            // Mobile browser hacks
+            if (me.device.isMobile && !me.device.cocoon) {
+                // Prevent the webview from moving on a swipe
+                window.document.addEventListener("touchmove", function (e) {
+                    e.preventDefault();
+                    window.scroll(0, 0);
+                    return false;
+                }, false);
+            }
+
             // future proofing (MS) feature detection
             me.device.pointerEnabled = me.agent.prefixed("pointerEnabled", navigator);
             me.device.maxTouchPoints = me.agent.prefixed("maxTouchPoints", navigator) || 0;
@@ -34,7 +44,7 @@
 
             // detect touch capabilities
             me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
-                              (navigator.isCocoonJS) || (me.device.pointerEnabled && (me.device.maxTouchPoints > 0));
+                              (me.device.cocoon) || (me.device.pointerEnabled && (me.device.maxTouchPoints > 0));
 
             // accelerometer detection
             me.device.hasAccelerometer = (
@@ -152,7 +162,7 @@
             // Kindle device ?
             me.device.Kindle = me.device.ua.match(/Kindle|Silk.*Mobile Safari/i) || false;
 
-             // Mobile platform
+            // Mobile platform
             me.device.isMobile = me.device.ua.match(/Mobi/i) ||
                                  me.device.iOS ||
                                  me.device.android ||
@@ -160,6 +170,13 @@
                                  me.device.BlackBerry ||
                                  me.device.Kindle ||
                                  me.device.iOS || false;
+            // ejecta
+            me.device.ejecta = (typeof window.ejecta !== "undefined");
+
+            // cocoon/cocoonJS
+            me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
+                               (typeof window.Cocoon !== "undefined"); // new cocoon
+
         };
 
         /*
@@ -261,7 +278,7 @@
         api.isMobile = false;
 
         /**
-         * equals to true if the device is an iOS platform <br>
+         * equals to true if the device is an iOS platform.
          * @type Boolean
          * @readonly
          * @name iOS
@@ -270,7 +287,7 @@
         api.iOS = false;
 
         /**
-         * equals to true if the device is an Android platform <br>
+         * equals to true if the device is an Android platform.
          * @type Boolean
          * @readonly
          * @name android
@@ -279,7 +296,7 @@
         api.android = false;
 
         /**
-         * equals to true if the device is an Android 2.x platform <br>
+         * equals to true if the device is an Android 2.x platform.
          * @type Boolean
          * @readonly
          * @name android2
@@ -287,8 +304,28 @@
          */
         api.android2 = false;
 
+       /**
+        * equals to true if the game is running under Ejecta.
+        * @type Boolean
+        * @readonly
+        * @see http://impactjs.com/ejecta
+        * @name ejecta
+        * @memberOf me.device
+        */
+        api.ejecta = false;
+
+        /**
+         * equals to true if the game is running under cocoon/cocoonJS.
+         * @type Boolean
+         * @readonly
+         * @see https://cocoon.io
+         * @name cocoon
+         * @memberOf me.device
+         */
+         api.cocoon = false;
+
          /**
-         * equals to true if the device is a Windows Phone platform <br>
+         * equals to true if the device is a Windows Phone platform.
          * @type Boolean
          * @readonly
          * @name wp
@@ -297,7 +334,7 @@
         api.wp = false;
 
         /**
-         * equals to true if the device is a BlackBerry platform <br>
+         * equals to true if the device is a BlackBerry platform.
          * @type Boolean
          * @readonly
          * @name BlackBerry
@@ -306,7 +343,7 @@
         api.BlackBerry = false;
 
         /**
-         * equals to true if the device is a Kindle platform <br>
+         * equals to true if the device is a Kindle platform.
          * @type Boolean
          * @readonly
          * @name Kindle

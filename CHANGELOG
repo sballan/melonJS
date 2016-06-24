@@ -1,8 +1,45 @@
 Version History
 ---------------
+4.0.0
+
+* Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
+* Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
+* Pointer : fixed bug with Chrome on Windows touch devices where touch input would register, but mouse input would not. (credit to BrianRosamilia)
+
+3.1.0
+* Audio : exposed a `me.audio.rate` function to allow modifying the playback rate of the specified audio clip.
+* Audio : added back the possibility to stream audio elements (through the `stream` flag when defining audio assets)
+* Camera : use the `alpha` component of the given color as the threshold for fading effect
+* Color : normalized support for #RGBA and #RRGGBBAA formats (to match CSS standard)
+* Core : added a `me.game.updateFrameRate` function to change the renderer framerate at runtime
+* Core : simplified the "startup" functions to allow for shorter initialization code (see boilerplate)
+* Core : removed previous Ejecta "hacks" (requires the latest Ejecta 2.1/development version)
+* Documentation : various fixes and missing items added (e.g me.Object that was missing)
+* Debug : debug panel(s) now automatically register themselves upon loading (see boilerplate)
+* Input : added support for gamepad analogue axis binding
+* Input : fixed a regression with pointer events not firing with "floating" regions (@thedrumchannell)
+* Particles : fixed a crash when removing a particle emmiter during a level change/reset
+* Renderable : fixed missing `onDestroyEvent` function when adding basic renderables to the game world.
+* Renderable : fixed Sprite objects initialization when using a string argument for "image" (@trevorjwilliams)
+* TMX : added support for JSON-format external tilesets
+* TMX : fixed the clearTile function when using `preRender` and the WebGL renderer
+* TMX : fixed `prerender` on browsers that support Canvas2DContextAttributes.alpha
+* TMX : disabled animated tiles when using the `prerender` mode (these two are not compatible)
+* TMX : fixed a regression with Tile property parsing
+* TMX : fixed a regression with level loading when no tilesets are defined.
+* TMX : fixed decoding of maps using CSV data format (in Tiled) and exported to JSON
+* TMX : added support for typed custom properties (Tiled 0.16)
+* WebGLRenderer : added a workaround for Safari resetting WebGL attributes bindings (see #783)
+
+3.0.1
+* Core : fixed/improved compatibility with Ejecta (e.g. initialization, CAFF support)
+* Input : actually really truly fix pointer event z-ordering, finally
+
 3.0.0
-* Audio : updated to the latest Howler v2.0.0-beta1 version
-* Container : added `autoDepth` feature that auto-increments a child's z-coordinate when inserted
+* Audio : updated to the latest Howler v2.0.0 beta version
+* Audio : added a `me.audio.resume` function for added convenience (was already possible by calling back `me.audio.play`)
+* Container : added an `autoDepth` feature that auto-increments a child's z-coordinate when inserted
+* Color : add support for the #ARGB and #AARRGGBB formats
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced `String.contains` by its ES6 equivalent: `String.includes`
@@ -10,6 +47,7 @@ Version History
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
 * Core : added `me.sys.updatesPerSecond` to configure updating less often than drawing (@Giwayume)
 * Entity : new positioning method, where the renderable is positioned according to its anchor and the Entity's body anchor (@Giwayume)
+* Examples : added an example showing how to build a basic menu (with a panel, checkboxes and buttons)
 * Font : fixed font height not being set when specifying a CSS Unit for the size
 * Font : added basic CSS Unit conversion from ‘pt’,’ex’,’em’ to ‘px’ (these are approximation and not guaranteed accurate)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
@@ -23,6 +61,8 @@ Version History
 * Input : renamed last remaining mouse-related objects : `me.input.mouse` => `me.input.pointer`, `me.event.MOVEMOVE` => `me.event.POINTERMOVE`
 * Input : added HTML5 Gamepad API support, with button and axis remapping
 * Input : optimised pointer detection using the quadtree
+* Input : now properly respect object z ordering when firing pointer events
+* Input : fixed event detection on items in a nested container
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Renderable : renderables are now using a 3d Vector for position, using the z axis for layer ordering.
 * Renderable : fixed a distortion issue when scaling and rotating sprites (@Giwayume)
@@ -42,11 +82,16 @@ Version History
 * TMX : removed `me.TMXTileMap.moveToCenter` and `me.TMXTileMap.reset` methods
 * TMX : added support for per-frame animation delay to Tiled Objects (for tileset animations)
 * TMX : added support for layer data encoding in JSON map format (Tiled 0.13)
-* TMX : added support for evaluations in TMX data; see spike entities in platformer 2 for a useful example
+* TMX : added support for evaluations in TMX data; see spike entities in the platformer for a useful example
+* TMX : fixed an isometric rendering bug with odd tile heights
+* TMX : throw an error message when using map exported in XML (deprecated in Tiled 0.15)
+* TMX : allow to parse the `backgroundcolor` attribute as formatted in Tiled 0.15 (#AARRGGBB)
+* TMX : use the new `columns` property (if available) when parsing maps (Tiled 0.15)
+* TMX : fixed a regression in AD tile rotation (squares tiles only)
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
-* WebGLRenderer : added `repeat` parameter to `createTexture` method
+* WebGLRenderer : added a `repeat` parameter to `createTexture` method
 
 2.1.4
 * Audio : fixed the audio-enable workaround on iOS9

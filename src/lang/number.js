@@ -1,6 +1,6 @@
 /**
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 
@@ -23,7 +23,7 @@ Number.prototype.clamp = function (low, high) {
 };
 
 /**
- * return a random integer between min, max (exclusive)
+ * return a random integer between min (included) and max (excluded)
  * @memberof! external:Number#
  * @alias random
  * @param {number} [min=this] minimum value.

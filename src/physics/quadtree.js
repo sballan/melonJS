@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -39,6 +39,11 @@
     var QT_ARRAY_PUSH = function (qt) {
         QT_ARRAY.push(qt);
     };
+
+    /**
+     * a temporary vector object to be reused
+     */
+    var QT_VECTOR = new me.Vector2d();
 
 
     /**
@@ -125,11 +130,19 @@
      * @param {me.Rect} rect bounds of the area to be checked
      * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
-    Quadtree.prototype.getIndex = function (rect) {
+    Quadtree.prototype.getIndex = function (item) {
+
+        var rect = item.getBounds(),
+            pos = rect.pos;
+
+        // use world coordinates for floating items
+        if (item.floating || (item.ancestor && item.ancestor.floating)) {
+            pos = me.game.viewport.localToWorld(pos.x, pos.y, QT_VECTOR);
+        }
 
         var index = -1,
-            rx = rect.pos.x,
-            ry = rect.pos.y,
+            rx = pos.x,
+            ry = pos.y,
             rw = rect.width,
             rh = rect.height,
             verticalMidpoint = this.bounds.pos.x + (this.bounds.width / 2),
@@ -169,7 +182,10 @@
 
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child instanceof me.Container) {
-                // recursivly insert childs
+                if (child.name !== "rootContainer") {
+                    this.insert(child);
+                }
+                // recursivly insert all childs
                 this.insertContainer(child);
             } else {
                 // only insert object with a bounding box
@@ -195,7 +211,7 @@
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
-            index = this.getIndex(item.getBounds());
+            index = this.getIndex(item);
 
             if (index !== -1) {
                 this.nodes[index].insert(item);
@@ -217,7 +233,7 @@
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
 
-                index = this.getIndex(this.objects[i].getBounds());
+                index = this.getIndex(this.objects[i]);
 
                 if (index !== -1) {
                     this.nodes[index].insert(this.objects.splice(i, 1)[0]);
@@ -244,7 +260,7 @@
         //if we have subnodes ...
         if (this.nodes.length > 0) {
 
-            var index = this.getIndex(item.getBounds());
+            var index = this.getIndex(item);
 
             //if rect fits into a subnode ..
             if (index !== -1) {

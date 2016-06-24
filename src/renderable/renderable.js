@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -118,6 +118,16 @@
              * @name me.Renderable#alpha
              */
             this.alpha = 1.0;
+
+            /**
+             * a reference to the Container object that contains this renderable,
+             * or undefined if it has not been added to one.
+             * @public
+             * @type me.Container
+             * @default undefined
+             * @name me.Renderable#ancestor
+             */
+            this.ancestor = undefined;
 
             /**
              * The bounding rectangle for this renderable
@@ -269,6 +279,25 @@
          **/
         draw : function (/*renderer*/) {
             // empty one !
+        },
+
+        /**
+         * Destroy function<br>
+         * @ignore
+         */
+        destroy : function () {
+            this.onDestroyEvent.apply(this, arguments);
+        },
+
+        /**
+         * OnDestroy Notification function<br>
+         * Called by engine before deleting the object
+         * @name onDestroyEvent
+         * @memberOf me.Renderable
+         * @function
+         */
+        onDestroyEvent : function () {
+            // to be extended !
         }
     });
 

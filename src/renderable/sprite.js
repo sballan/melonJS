@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -21,7 +21,7 @@
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
      * @param {Boolean} [settings.flipX] Initial flip for X-axis.
      * @param {Boolean} [settings.flipY] Initial flip for Y-axis.
-     * @param {me.Vector2d} [settings.anchorPoint] Anchor point.
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a static Sprite Object
      * mySprite = new me.Sprite (100, 100, {
@@ -88,15 +88,18 @@
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
             this.isSprite = true;
-            
+
+            // set the proper image/texture to use
             var image = settings.image;
-            
-            if (typeof (settings.region) !== "undefined") {
-                if ((typeof (image) === "object") && image.getRegion) {
+
+            if (image instanceof me.CanvasRenderer.prototype.Texture) {
+                // use the texture from the texture Atlas
+                this.image = image.getTexture();
+                // check for defined region
+                if (typeof (settings.region) !== "undefined") {
                     // use a texture atlas
                     var region = image.getRegion(settings.region);
                     if (region) {
-                        this.image = image.getTexture();
                         // set the sprite offset within the texture
                         this.offset.setV(region.offset);
                         // set angle if defined
@@ -107,22 +110,19 @@
                         // throw an error
                         throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
                     }
-                } else {
-                    // throw an error
-                    throw new me.Renderable.Error("Texture - invalid texture atlas : " + image);
                 }
             } else {
-               // use a standard image
+               // standard image
                this.image = me.utils.getImage(image);
             }
 
             // call the super constructor
             this._super(me.Renderable, "init", [
                 x, y,
-                settings.framewidth  || image.width,
-                settings.frameheight || image.height
+                settings.framewidth  || this.image.width,
+                settings.frameheight || this.image.height
             ]);
-            
+
             // update anchorPoint
             if (settings.anchorPoint) {
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
@@ -225,6 +225,9 @@
             // set the scaleFlag
             this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
 
+            // resize the bounding box
+            this.resizeBounds(this.width * x, this.height * y);
+
         },
 
         /**
@@ -281,10 +284,6 @@
                     return;
                 }
             }
-            // save global alpha
-            var alpha = renderer.globalAlpha();
-            // sprite alpha value
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
@@ -293,6 +292,9 @@
 
             // save context
             renderer.save();
+
+            // sprite alpha value
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             // calculate pixel pos of the anchor point
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
@@ -335,28 +337,6 @@
 
             // restore context
             renderer.restore();
-
-            // restore global alpha
-            renderer.setGlobalAlpha(alpha);
-        },
-
-        /**
-         * Destroy function<br>
-         * @ignore
-         */
-        destroy : function () {
-            this.onDestroyEvent.apply(this, arguments);
-        },
-
-        /**
-         * OnDestroy Notification function<br>
-         * Called by engine before deleting the object
-         * @name onDestroyEvent
-         * @memberOf me.Sprite
-         * @function
-         */
-        onDestroyEvent : function () {
-            // to be extended !
         }
     });
 

@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015 Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -54,7 +54,7 @@
             this.fontContext2D = this.backBufferContext2D;
 
             // apply the default color to the 2d context
-            this.setColor(this.globalColor);
+            this.setColor(this.currentColor);
 
             // create a texture cache
             this.cache = new me.Renderer.TextureCache();
@@ -64,23 +64,23 @@
 
         /**
          * prepare the framebuffer for drawing a new frame
-         * @name prepareSurface
+         * @name clear
          * @memberOf me.CanvasRenderer
          * @function
          */
-        prepareSurface : function () {
+        clear : function () {
             if (this.transparent) {
-                this.clearSurface(null, "rgba(0,0,0,0)", true);
+                this.clearColor("rgba(0,0,0,0)", true);
             }
         },
 
         /**
          * render the main framebuffer on screen
-         * @name blitSurface
+         * @name flush
          * @memberOf me.CanvasRenderer
          * @function
          */
-        blitSurface : function () {
+        flush : function () {
             if (this.doubleBuffering) {
                 this.context.drawImage(
                     this.backBufferCanvas, 0, 0,
@@ -92,25 +92,38 @@
         },
 
         /**
-         * Clear the specified context with the given color
-         * @name clearSurface
+         * Clears the main framebuffer with the given color
+         * @name clearColor
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Context2d} [ctx=null] Canvas context, defaults to system context if falsy.
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        clearSurface : function (ctx, col, opaque) {
-            if (!ctx) {
-                ctx = this.backBufferContext2D;
-            }
-            var _canvas = ctx.canvas;
-            ctx.save();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.globalCompositeOperation = opaque ? "copy" : "source-over";
-            ctx.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
-            ctx.fillRect(0, 0, _canvas.width, _canvas.height);
-            ctx.restore();
+        clearColor : function (col, opaque) {
+            var _ctx = this.backBufferContext2D;
+            var _canvas = _ctx.canvas;
+
+            _ctx.save();
+            _ctx.setTransform(1, 0, 0, 1, 0, 0);
+            _ctx.globalCompositeOperation = opaque ? "copy" : "source-over";
+            _ctx.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
+            _ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+            _ctx.restore();
+        },
+
+        /**
+         * Sets all pixels in the given rectangle to transparent black, <br>
+         * erasing any previously drawn content.
+         * @name clearRect
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x x axis of the coordinate for the rectangle starting point.
+         * @param {Number} y y axis of the coordinate for the rectangle starting point.
+         * @param {Number} width The rectangle's width.
+         * @param {Number} height The rectangle's height.
+         */
+        clearRect : function (x, y, width, height) {
+            this.backBufferContext2D.clearRect(x, y, width, height);
         },
 
         /**
@@ -270,7 +283,7 @@
                 this.context.globalCompositeOperation = "copy";
             }
             this.setAntiAlias(this.context, this.antiAlias);
-            this.blitSurface();
+            this.flush();
         },
 
         /**
@@ -291,7 +304,7 @@
          */
         restore : function () {
             this.backBufferContext2D.restore();
-            this.globalColor.glArray[3] = this.backBufferContext2D.globalAlpha;
+            this.currentColor.glArray[3] = this.backBufferContext2D.globalAlpha;
         },
 
         /**
@@ -341,7 +354,7 @@
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         setGlobalAlpha : function (a) {
-            this.backBufferContext2D.globalAlpha = this.globalColor.glArray[3] = a;
+            this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = a;
         },
 
         /**
@@ -525,8 +538,21 @@
         },
 
         /**
+         * Resets (overrides) the renderer transformation matrix to the
+         * identity one, and then apply the given transformation matrix.
+         * @name setTransform
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Matrix2d} mat2d Matrix to transform by
+         */
+        setTransform : function (mat2d) {
+            this.resetTransform();
+            this.transform(mat2d);
+        },
+
+        /**
          * Multiply given matrix into the renderer tranformation matrix
-         * @name multiplyMatrix
+         * @name transform
          * @memberOf me.CanvasRenderer
          * @function
          * @param {me.Matrix2d} mat2d Matrix to transform by

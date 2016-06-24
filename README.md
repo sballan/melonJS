@@ -6,7 +6,7 @@ A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](http://melonjs.org/media/alex4-github.png)
 
-Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
 
 [melonJS](http://melonjs.org/) is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
@@ -50,7 +50,7 @@ and currently features :
     - Shape based Tile collision support
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
-- Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/)
+- Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/) and [Ejecta](https://github.com/melonjs/melonJS/wiki/How-to-build-your-game-for-tvOS-(or-iOS)-using-Ejecta)
 - Asynchronous messaging support (minPubSub)
 - Basic GUI elements included
 - Customizable loader
@@ -83,7 +83,7 @@ To build your own version of melonJS you will need to install :
 Once the Node.js package manager has been installed (using the installer from their website),
 you need to install build dependencies and Grunt CLI (Command Line Interface), by doing the following :
 
-Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
+Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Command Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
 
     $ npm install -g grunt-cli
@@ -139,6 +139,6 @@ Questions, need help ?
 If you need technical support, you can contact us through the following channels :
 * [melonJS developer forum](http://groups.google.com/group/melonjs)
 * [gitter web chat](https://gitter.im/melonjs/public)
-* [melonJS wikipage] (https://github.com/melonjs/melonJS/wiki)
+* [melonJS wikipage](https://github.com/melonjs/melonJS/wiki)
 
 For any other non technical related questions, feel free to also send us an [email](mailto:contact@melonjs.org).

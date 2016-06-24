@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -51,6 +51,13 @@
              * @memberOf me.Container
              */
             this.transform = new me.Matrix2d();
+
+            /**
+             * whether the container is the root of the scene
+             * @private
+             * @ignore
+             */
+            this._root = false;
 
             // call the _super constructor
             this._super(me.Renderable,
@@ -156,7 +163,7 @@
                 this.sort();
             }
 
-            if (typeof child.onActivateEvent === "function") {
+            if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                 child.onActivateEvent();
             }
 
@@ -190,7 +197,7 @@
 
                 this.children.splice(index, 0, child);
 
-                if (typeof child.onActivateEvent === "function") {
+                if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                     child.onActivateEvent();
                 }
 
@@ -403,6 +410,29 @@
         },
 
         /**
+         * Checks if this container is root or if ti's attached to the root container.
+         * @private
+         * @name isAttachedToRoot
+         * @memberOf me.Container
+         * @function
+         * @returns Boolean
+         */
+        isAttachedToRoot : function () {
+            if (this._root) {
+                return true;
+            } else {
+                var ancestor = this.ancestor;
+                while (ancestor) {
+                    if (ancestor._root === true) {
+                        return true;
+                    }
+                    ancestor = ancestor.ancestor;
+                }
+                return false;
+            }
+        },
+
+        /**
          * update the renderable's bounding rect (private)
          * @private
          * @name updateBoundsPos
@@ -428,6 +458,15 @@
             return this._bounds;
         },
 
+        onActivateEvent : function () {
+          for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+              var child = this.children[i];
+              if (typeof child.onActivateEvent === "function") {
+                  child.onActivateEvent();
+              }
+          }
+        },
+
         /**
          * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
          * @name removeChild
@@ -438,8 +477,11 @@
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
         removeChild : function (child, keepalive) {
-            if (child.ancestor) {
+            if (this.hasChild(child)) {
                 deferredRemove.defer(this, child, keepalive);
+            }
+            else {
+                throw new me.Container.Error("Child is not mine.");
             }
         },
 
@@ -455,10 +497,7 @@
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
         removeChildNow : function (child, keepalive) {
-            var childIndex = -1;
-            if (this.hasChild(child) && ((childIndex = this.getChildIndex(child)) >= 0)) {
-                child.ancestor = undefined;
-
+            if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
                 }
@@ -471,10 +510,13 @@
                     me.pool.push(child);
                 }
 
-                this.children.splice(childIndex, 1);
-            }
-            else {
-                throw new me.Container.Error(child + " The supplied child must be a child of the caller " + this);
+                // Don't cache the child index; another element might have been removed
+                // by the child's `onDeactivateEvent` or `destroy` methods
+                var childIndex = this.getChildIndex(child);
+                if (childIndex >= 0) {
+                    this.children.splice(childIndex, 1);
+                    child.ancestor = undefined;
+                }
             }
         },
 
@@ -594,12 +636,29 @@
             }
         },
 
+        onDeactivateEvent : function () {
+            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+                var child = this.children[i];
+                if (typeof child.onDeactivateEvent === "function") {
+                    child.onDeactivateEvent();
+                }
+            }
+        },
+
         /**
          * Z Sorting function
          * @ignore
          */
         _sortZ : function (a, b) {
             return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
+        },
+
+        /**
+         * Reverse Z Sorting function
+         * @ignore
+         */
+        _sortReverseZ : function (a, b) {
+            return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
         },
 
         /**
@@ -638,9 +697,9 @@
             }
 
             // delete all children
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+            for (var i = this.children.length, obj; i >= 0; (obj = this.children[--i])) {
                 // don't remove it if a persistent object
-                if (!obj.isPersistent) {
+                if (obj && !obj.isPersistent) {
                     this.removeChildNow(obj);
                 }
             }

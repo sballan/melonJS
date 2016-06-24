@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -336,7 +336,7 @@
             var columnItr = rowItr.clone();
 
             // main drawing loop
-            for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
+            for (var y = startPos.y * 2 ; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
                 columnItr.setV(rowItr);
                 for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
                     //check if it's valid tile, if so render
@@ -355,7 +355,7 @@
                             tileset.drawTile(
                                 renderer,
                                 offset.x + x,
-                                offset.y + y - tileset.tileheight,
+                                offset.y + y / 2 - tileset.tileheight,
                                 tmxTile
                             );
                         }
@@ -460,14 +460,14 @@
 
             // Start with the coordinates of a grid-aligned tile
             var referencePoint = me.pool.pull("me.Vector2d",
-                Math.floor(x / (this.tilewidth + this.sidelengthx)),
-                Math.floor((y / (this.tileheight + this.sidelengthy)))
+                Math.floor(x / (this.columnwidth * 2)),
+                Math.floor((y / (this.rowheight * 2)))
             );
 
             // Relative x and y position on the base square of the grid-aligned tile
             var rel = me.pool.pull("me.Vector2d",
-                x - referencePoint.x * (this.tilewidth + this.sidelengthx),
-                y - referencePoint.y * (this.tileheight + this.sidelengthy)
+                x - referencePoint.x * (this.columnwidth * 2),
+                y - referencePoint.y * (this.rowheight * 2)
             );
 
             // Adjust the reference point to the correct tile coordinates

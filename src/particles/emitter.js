@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -314,7 +314,6 @@
      *
      * // Add the emitter to the game world
      * me.game.world.addChild(emitter);
-     * me.game.world.addChild(emitter.container);
      *
      * // Launch all particles one time and stop, like a explosion
      * emitter.burstParticles();
@@ -393,7 +392,7 @@
             // Reset the emitter to defaults
             this.reset(settings);
         },
-        
+
         onActivateEvent: function() {
             this.ancestor.addChild(this.container);
             this.container.pos.z = this.pos.z;
@@ -401,9 +400,11 @@
                 this.ancestor.sort();
             }
         },
-        
+
         onDeactivateEvent: function() {
-            this.container.ancestor.removeChild(this.container);
+            if (this.ancestor.hasChild(this.container)) {
+                this.ancestor.removeChildNow(this.container);
+            }
         },
 
         destroy: function () {
@@ -411,17 +412,25 @@
         },
 
         /**
-         * returns a random point inside the bounds for this emitter
-         * @name getRandomPoint
+         * returns a random point inside the bounds x axis of this emitter
+         * @name getRandomPointX
          * @memberOf me.ParticleEmitter
          * @function
-         * @return {me.Vector2d} new vector
+         * @return {Number}
          */
-        getRandomPoint: function () {
-            var vector = this.pos.clone();
-            vector.x += (0).randomFloat(this.width);
-            vector.y += (0).randomFloat(this.height);
-            return vector;
+        getRandomPointX: function () {
+            return this.pos.x + (0).randomFloat(this.width);
+        },
+
+        /**
+         * returns a random point inside the bounds y axis of this emitter
+         * @name getRandomPointY
+         * @memberOf me.ParticleEmitter
+         * @function
+         * @return {Number}
+         */
+        getRandomPointY: function () {
+            return this.pos.y + (0).randomFloat(this.height);
         },
 
         /**

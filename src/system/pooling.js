@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -45,6 +45,7 @@
             api.register("me.Particle", me.Particle, true);
             api.register("me.Sprite", me.Sprite);
             api.register("me.Vector2d", me.Vector2d, true);
+            api.register("me.Glyph", me.Glyph, true);
         };
 
         /**

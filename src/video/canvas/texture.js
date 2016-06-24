@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -21,7 +21,7 @@
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
      * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me.CanvasRenderer
      * @name Texture
      * @constructor
@@ -149,7 +149,7 @@
                     }
 
                     atlas[frame.filename] = {
-                        name         : name, // frame name
+                        name         : frame.filename, // frame name
                         offset       : new me.Vector2d(s.x, s.y),
                         anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
                         width        : s.w,
@@ -327,7 +327,7 @@
             }
             // instantiate a new animation sheet object
             return new me.AnimationSheet(0, 0, Object.assign({
-                image: this.texture,
+                image: this,
                 framewidth: 0,
                 frameheight: 0,
                 margin: 0,

@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -248,7 +248,7 @@
         /**
          * onload callback
          * @public
-         * @callback
+         * @function
          * @name onload
          * @memberOf me.loader
          * @example
@@ -262,7 +262,7 @@
          * each time a resource is loaded, the loader will fire the specified function,
          * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
          * @public
-         * @callback
+         * @function
          * @name onProgress
          * @memberOf me.loader
          * @example
@@ -321,27 +321,22 @@
 
 
         /**
-         * set all the specified game resources to be preloaded.<br>
-         * each resource item must contain the following fields :<br>
-         * - name    : internal name of the resource<br>
-         * - type    : "binary", "image", "tmx", "tsx", "audio"<br>
-         * each resource except type "tmx" must contain the following field :<br>
-         * - src     : path and file name of the resource<br>
-         * (!) for tmx :<br>
-         * - src     : path and file name of the resource<br>
-         * or<br>
-         * - data    : the json or xml object representation of the tmx file<br>
-         * - format  : "xml" or "json"<br>
-         * (!) for audio :<br>
-         * - src     : path (only) where resources are located<br>
-         * <br>
+         * set all the specified game resources to be preloaded.
          * @name preload
          * @memberOf me.loader
          * @public
          * @function
          * @param {Object[]} resources
+         * @param {String} resources.name internal name of the resource
+         * @param {String} resources.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
+         * @param {Boolean} [resources.stream] set to true if you don't have to wait for the audio file to be fully downloaded
+         * @param {Function} onload function to be called when the resource is loaded
+         * @param {Function} onerror function to be called in case of error
+         * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
+         * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
          * @example
-         * var g_resources = [
+         * game_resources = [
          *   // PNG tileset
          *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
          *   // PNG packed texture
@@ -361,11 +356,11 @@
          *   // JSON file (used for texturePacker)
          *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
          * ];
-         *
+         * ...
          * // set all resources to be loaded
-         * me.loader.preload(g_resources);
+         * me.loader.preload(game.resources, this.loaded.bind(this));
          */
-        api.preload = function (res) {
+        api.preload = function (res, onload, switchToLoadState) {
             // parse the resources
             for (var i = 0; i < res.length; i++) {
                 resourceCount += api.load(
@@ -374,29 +369,31 @@
                     api.onLoadingError.bind(api, res[i])
                 );
             }
+            // set the onload callback if defined
+            if (typeof(onload) !== "undefined") {
+                api.onload = onload;
+            }
+
+            if (switchToLoadState !== false) {
+                // swith to the loading screen
+                me.state.change(me.state.LOADING);
+            }
+
             // check load status
             checkLoadStatus();
         };
 
         /**
-         * Load a single resource (to be used if you need to load additional resource during the game)<br>
-         * Given parameter must contain the following fields :<br>
-         * - name    : internal name of the resource<br>
-         * - type    : "audio", binary", "image", "json", "tmx", "tsx"<br>
-         * each resource except type "tmx" must contain the following field :<br>
-         * - src     : path and file name of the resource<br>
-         * (!) for tmx :<br>
-         * - src     : path and file name of the resource<br>
-         * or<br>
-         * - data    : the json or xml object representation of the tmx file<br>
-         * - format  : "xml" or "json"<br>
-         * (!) for audio :<br>
-         * - src     : path (only) where resources are located<br>
+         * Load a single resource (to be used if you need to load additional resource during the game)
          * @name load
          * @memberOf me.loader
          * @public
          * @function
          * @param {Object} resource
+         * @param {String} resource.name internal name of the resource
+         * @param {String} resource.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resource.src  path and/or file name of the resource (for audio assets only the path is required)
+         * @param {Boolean} [resource.stream] set to true if you don't have to wait for the audio file to be fully downloaded
          * @param {Function} onload function to be called when the resource is loaded
          * @param {Function} onerror function to be called in case of error
          * @example
@@ -435,7 +432,7 @@
                     return 1;
 
                 case "audio":
-                    me.audio.load(res, onload, onerror);
+                    me.audio.load(res, !!res.stream, onload, onerror);
                     return 1;
 
                 default:

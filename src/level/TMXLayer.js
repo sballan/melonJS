@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -24,9 +24,20 @@
 
             // apply given parameters
             this.name = name;
-            this.color = color;
             this.pos.z = z;
             this.floating = true;
+
+            // parse the given color
+            if (color instanceof me.Color) {
+                this.color = color.toRGBA();
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                var _col = me.pool.pull("me.Color");
+                this.color = _col.parseCSS(color).toRGBA();
+                me.pool.push(_col);
+            }
+
+
         },
 
         /**
@@ -432,7 +443,7 @@
                 this.canvasRenderer = new me.CanvasRenderer(
                     me.video.createCanvas(this.width, this.height),
                     this.width, this.height,
-                    {/* use default values*/}
+                    { transparent : true }
                 );
             }
 
@@ -456,7 +467,6 @@
                 var tileset = this.tilesets.tilesets;
                 for (var i = 0; i < tileset.length; i++) {
                     if (tileset[i].isAnimated) {
-                        tileset[i].isAnimated = false;
                         this.animatedTilesets.push(tileset[i]);
                     }
                 }
@@ -510,8 +520,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in world/pixels coordinates)
+         * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {Number} TileId
          */
         getTileId : function (x, y) {
@@ -525,8 +535,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in world/pixels coordinates)
+         * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
@@ -539,8 +549,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in map coordinates: row/column)
+         * @param {Number} y Y coordinate (in map coordinates: row/column)
          * @param {Number} tileId tileId
          * @return {me.Tile} the corresponding newly created tile object
          */
@@ -563,8 +573,13 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in map coordinates: row/column)
+         * @param {Number} y Y coordinate (in map coordinates: row/column)
+         * @example
+         * me.game.world.getChildByType(me.TMXLayer).forEach(function(layer) {
+         *     // clear all tiles at the given x,y coordinates
+         *     layer.clearTile(x, y);
+         * });
          */
         clearTile : function (x, y) {
             // clearing tile

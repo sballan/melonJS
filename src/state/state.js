@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Screens objects & State machine
@@ -13,7 +13,7 @@
      * every "screen" object (title screen, credits, ingame, etc...) to be managed <br>
      * through the state manager must inherit from this base class.
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @see me.state
@@ -334,7 +334,7 @@
 
         /**
          * onPause callback
-         * @callback
+         * @function
          * @name onPause
          * @memberOf me.state
          */
@@ -342,7 +342,7 @@
 
         /**
          * onResume callback
-         * @callback
+         * @function
          * @name onResume
          * @memberOf me.state
          */
@@ -350,7 +350,7 @@
 
         /**
          * onStop callback
-         * @callback
+         * @function
          * @name onStop
          * @memberOf me.state
          */
@@ -358,7 +358,7 @@
 
         /**
          * onRestart callback
-         * @callback
+         * @function
          * @name onRestart
          * @memberOf me.state
          */
@@ -629,6 +629,11 @@
             // Protect against undefined ScreenObject
             if (typeof(_screenObject[state]) === "undefined") {
                 throw new me.Error("Undefined ScreenObject for state '" + state + "'");
+            }
+
+            if (api.isCurrent(state)) {
+                // do nothing if already the current state
+                return;
             }
 
             _extraArgs = null;

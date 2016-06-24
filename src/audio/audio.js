@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Audio Mngt Objects
@@ -80,16 +80,17 @@
         });
 
         /**
-         * initialize the audio engine<br>
-         * the melonJS loader will try to load audio files corresponding to the
-         * browser supported audio format<br>
-         * if no compatible audio codecs are found, audio will be disabled
+         * configure and initialize the audio engine<br>
+         * melonJS will try to load audio files corresponding to the browser supported audio format(s)<br>
+         * below is the list of supported file extentions : <br>
+         * <i>"mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby" </i> <br>
+         * keep in mind that not all browsers can play all audio formats, and if no compatible codecs are detected, audio will be disabled.
          * @name init
          * @memberOf me.audio
          * @public
          * @function
          * @param {String}
-         *          audioFormat audio format provided ("mp3, ogg, m4a, wav")
+         *          [audioFormat="mp3"] audio format provided
          * @return {Boolean} Indicates whether audio initialization was successful
          * @example
          * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format
@@ -146,7 +147,7 @@
          * - src     : source path<br>
          * @ignore
          */
-        api.load = function (sound, onload_cb, onerror_cb) {
+        api.load = function (sound, html5, onload_cb, onerror_cb) {
             var urls = [];
             if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
                 throw new api.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
@@ -157,12 +158,11 @@
             audioTracks[sound.name] = new Howl({
                 src : urls,
                 volume : Howler.volume(),
+                html5 : html5 === true,
                 onloaderror : function () {
-                    audioTracks[sound.name] = this;
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
                 onload : function () {
-                    audioTracks[sound.name] = this;
                     retry_counter = 0;
                     if (onload_cb) {
                         onload_cb();
@@ -235,6 +235,35 @@
         };
 
         /**
+         * change the playback rate of a sound.
+         * @name rate
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_name audio clip name - case sensitive
+         * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+         * @return current playback rate.
+         * @example
+         * // speed up the playback of the background music
+         * me.audio.rate("dst-gameforest", 2.0);
+         *
+         */
+        api.rate = function (sound_name, rate, instance_id) {
+            var sound = audioTracks[sound_name];
+            if (sound && typeof sound !== "undefined") {
+                var _args = [];
+                if (typeof rate !== "undefined") {
+                    _args[_args.length] = rate;
+                }
+                if (typeof instance_id !== "undefined") {
+                    _args[_args.length] = instance_id;
+                }
+                return sound.rate.apply(sound, _args);
+            }
+        };
+
+        /**
          * stop the specified sound on all channels
          * @name stop
          * @memberOf me.audio
@@ -270,6 +299,31 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.pause(instance_id);
+            }
+        };
+
+        /**
+         * resume the specified sound on all channels<br>
+         * @name resume
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_name audio clip name - case sensitive
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+         * @example
+         * // play a audio clip
+         * var id = me.audio.play("myClip");
+         * ...
+         * // pause it
+         * me.audio.pause("myClip", id);
+         * ...
+         * // resume
+         * me.audio.resume("myClip", id);
+         */
+        api.resume = function (sound_name, instance_id) {
+            var sound = audioTracks[sound_name];
+            if (sound && typeof sound !== "undefined") {
+                sound.play(instance_id);
             }
         };
 

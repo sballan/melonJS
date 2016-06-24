@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -21,8 +21,12 @@
          */
         init : function (emitter) {
             // Call the super constructor
-            var point = emitter.getRandomPoint();
-            this._super(me.Renderable, "init", [point.x, point.y, emitter.image.width, emitter.image.height]);
+            this._super(me.Renderable, "init", [
+                emitter.getRandomPointX(),
+                emitter.getRandomPointY(),
+                emitter.image.width,
+                emitter.image.height
+            ]);
 
             // Particle will always update
             this.alwaysUpdate = true;
@@ -124,7 +128,7 @@
             this.pos.y += this.vel.y * skew;
 
             // Update particle transform
-            this.transform.set(
+            this.transform.setTransform(
                 scale, 0, 0,
                 0, scale, 0,
                 ~~this.pos.x, ~~this.pos.y, 1

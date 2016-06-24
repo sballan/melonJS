@@ -1,6 +1,6 @@
 /**
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 
@@ -111,7 +111,7 @@
          * Additionnaly the level id will also be passed
          * to the called function.
          * @public
-         * @callback
+         * @function
          * @name onLevelLoaded
          * @memberOf me.game
          * @example
@@ -159,6 +159,7 @@
                 // the root object of our world is an entity container
                 api.world = new me.Container(0, 0, width, height);
                 api.world.name = "rootContainer";
+                api.world._root = true;
 
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
@@ -180,7 +181,7 @@
         };
 
         /**
-         * reset the game Object manager<p>
+         * reset the game Object manager<br>
          * destroy all current objects
          * @name reset
          * @memberOf me.game
@@ -203,6 +204,23 @@
             // reset the renderer
             renderer.reset();
 
+            // publish reset notification
+            me.event.publish(me.event.GAME_RESET);
+
+            // Refresh internal variables for framerate  limiting
+            api.updateFrameRate();
+        };
+
+        /**
+         * Update the renderer framerate using the system config variables.
+         * @name updateFrameRate
+         * @memberOf me.game
+         * @public
+         * @function
+         * @see me.sys.fps
+         * @see me.sys.updatesPerSecond
+         */
+        api.updateFrameRate = function () {
             // reset the frame counter
             frameCounter = 0;
             frameRate = ~~(0.5 + 60 / me.sys.fps);
@@ -315,7 +333,7 @@
                 api.world.transform.translate(-translateX, -translateY);
 
                 // prepare renderer to draw a new frame
-                me.video.renderer.prepareSurface();
+                me.video.renderer.clear();
 
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
@@ -330,8 +348,8 @@
 
             isDirty = false;
 
-            // blit our frame
-            me.video.renderer.blitSurface();
+            // flush/render our frame
+            me.video.renderer.flush();
         };
 
         // return our object

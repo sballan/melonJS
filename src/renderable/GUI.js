@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -81,7 +81,7 @@
              * @name me.GUI_Object#isHoldable
              */
             this.isHoldable = false;
-            
+
             /**
              * true if the pointer is over the object
              * @public
@@ -126,6 +126,7 @@
             // Check if left mouse button is pressed OR if device has touch
             if ((event.which === 1 || me.device.touch) && this.isClickable) {
                 this.updated = true;
+                this.released = false;
                 if (this.isHoldable) {
                     if (this.holdTimeout !== null) {
                         me.timer.clearTimeout(this.holdTimeout);
@@ -150,7 +151,7 @@
         onClick : function (/* event */) {
             return false;
         },
-        
+
         /**
          * function callback for the pointerEnter event
          * @ignore
@@ -159,7 +160,7 @@
             this.hover = true;
             return this.onOver(event);
         },
-        
+
         /**
          * function called when the pointer is over the object
          * @name onOver
@@ -169,7 +170,7 @@
          * @param {Event} event the event object
          */
         onOver : function (/* event */) {},
-        
+
         /**
          * function callback for the pointerLeave event
          * @ignore
@@ -179,7 +180,7 @@
             this.release.call(this, event);
             return this.onOut(event);
         },
-        
+
         /**
          * function called when the pointer is leaving the object area
          * @name onOut
@@ -189,7 +190,7 @@
          * @param {Event} event the event object
          */
         onOut : function (/* event */) {},
-        
+
         /**
          * function callback for the pointerup event
          * @ignore
@@ -239,6 +240,7 @@
 
         /**
          * function called when added to the game world or a container
+         * @ignore
          */
         onActivateEvent : function () {
             // register pointer events
@@ -247,11 +249,11 @@
             me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
             me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
             me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
-            
         },
 
         /**
          * function called when removed from the game world or a container
+         * @ignore
          */
         onDeactivateEvent : function () {
             // release pointer events
@@ -260,18 +262,6 @@
             me.input.releasePointerEvent("pointercancel", this);
             me.input.releasePointerEvent("pointerenter", this);
             me.input.releasePointerEvent("pointerleave", this);
-        },
-
-        /**
-         * OnDestroy notification function<br>
-         * Called by engine before deleting the object<br>
-         * be sure to call the parent function if overwritten
-         * @name onDestroyEvent
-         * @memberOf me.GUI_Object
-         * @public
-         * @function
-         */
-        onDestroyEvent : function () {
             me.timer.clearTimeout(this.holdTimeout);
         }
     });

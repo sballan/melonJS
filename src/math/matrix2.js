@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -10,7 +10,7 @@
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
@@ -20,13 +20,13 @@
     /** @scope me.Matrix2d.prototype */    {
 
         /** @ignore */
-        init : function (a, b, c, d, e, f, g, h, i) {
+        init : function () {
             this.val = new Float32Array(9);
-            if (a instanceof me.Matrix2d) {
-                this.copy(a);
+            if (arguments.length && arguments[0] instanceof me.Matrix2d) {
+                this.copy(arguments[0]);
             }
-            else if (arguments.length === 9) {
-                this.set(a, b, c, d, e, f, g, h, i);
+            else if (arguments.length >= 6) {
+                this.setTransform.apply(this, arguments);
             }
             else {
                 this.identity();
@@ -43,7 +43,7 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         identity : function () {
-            this.set(
+            this.setTransform(
                 1, 0, 0,
                 0, 1, 0,
                 0, 0, 1
@@ -54,32 +54,44 @@
 
         /**
          * set the matrix to the specified value
-         * @name set
+         * @name setTransform
          * @memberOf me.Matrix2d
          * @function
-         * @param {Number} aX
-         * @param {Number} aY
-         * @param {Number} aW
-         * @param {Number} bX
-         * @param {Number} bY
-         * @param {Number} bW
-         * @param {Number} cX
-         * @param {Number} cY
-         * @param {Number} cW
+         * @param {Number} a
+         * @param {Number} b
+         * @param {Number} c
+         * @param {Number} d
+         * @param {Number} e
+         * @param {Number} f
+         * @param {Number} [g=0]
+         * @param {Number} [h=0]
+         * @param {Number} [i=1]
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
-        set : function () {
+        setTransform : function () {
             var a = this.val;
 
-            a[0] = arguments[0];
-            a[1] = arguments[1];
-            a[2] = arguments[2];
-            a[3] = arguments[3];
-            a[4] = arguments[4];
-            a[5] = arguments[5];
-            a[6] = arguments[6];
-            a[7] = arguments[7];
-            a[8] = arguments[8];
+            if (arguments.length === 9) {
+                a[0] = arguments[0]; // a
+                a[1] = arguments[1]; // b
+                a[2] = arguments[2]; // c
+                a[3] = arguments[3]; // d
+                a[4] = arguments[4]; // e
+                a[5] = arguments[5]; // f
+                a[6] = arguments[6]; // g
+                a[7] = arguments[7]; // h
+                a[8] = arguments[8]; // i
+            } else if (arguments.length === 6) {
+                a[0] = arguments[0]; // a
+                a[1] = arguments[2]; // c
+                a[2] = arguments[4]; // e
+                a[3] = arguments[1]; // b
+                a[4] = arguments[3]; // d
+                a[5] = arguments[5]; // f
+                a[6] = 0; // g
+                a[7] = 0; // h
+                a[8] = 1; // i
+            }
 
             return this;
         },
@@ -89,7 +101,7 @@
          * @name copy
          * @memberOf me.Matrix2d
          * @function
-         * @param {me.Matrix2d} b the matrix object to copy from
+         * @param {me.Matrix2d} m the matrix object to copy from
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         copy : function (b) {
@@ -129,11 +141,16 @@
             return this;
         },
 
-        /**
-         * Multiply this matrix into a vector
-         * @ignore
-         */
-        vectorMultiply : function (v) {
+
+       /**
+        * Transforms the given vector according to this matrix.
+        * @name multiplyVector
+        * @memberOf me.Matrix2d
+        * @function
+        * @param {me.Vector2d} vector the vector object to be transformed
+        * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+        **/
+        multiplyVector : function (v) {
             var a = this.val,
                 x = v.x,
                 y = v.y;
@@ -154,14 +171,52 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         scale : function (x, y) {
-            var a = this.val;
+            var a = this.val,
+               _x = x,
+               _y = typeof(y) === "undefined" ? _x : y;
 
-            a[0] *= x;
-            a[1] *= x;
-            a[3] *= y;
-            a[4] *= y;
+            a[0] *= _x;
+            a[1] *= _x;
+            a[3] *= _y;
+            a[4] *= _y;
 
             return this;
+        },
+
+        /**
+         * adds a 2D scaling transformation.
+         * @name scaleV
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Vector2d} vector scaling vector
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        scaleV : function (v) {
+            return this.scale(v.x, v.y);
+        },
+
+        /**
+         * specifies a 2D scale operation using the [sx, 1] scaling vector
+         * @name scaleX
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {Number} x x scaling vector
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        scaleX : function (x) {
+            return this.scale(x, 1);
+        },
+
+        /**
+         * specifies a 2D scale operation using the [1,sy] scaling vector
+         * @name scaleY
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {Number} y y scaling vector
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        scaleY : function (y) {
+            return this.scale(1, y);
         },
 
         /**
